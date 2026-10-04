@@ -33,7 +33,7 @@ fun Video.toVideoDto(posterUrl: String, backdropUrl: String, streamUrl: String) 
     year = year,
     description = description,
     durationSeconds = durationSeconds,
-    posterUrl = poster,
+    posterUrl = posterUrl,
     backdropUrl = backdropUrl,
     streamUrl = streamUrl,
     license = license.toLicenseDto(),
