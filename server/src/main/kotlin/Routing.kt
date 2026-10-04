@@ -16,20 +16,18 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
+import java.io.File
 
-fun Application.configureRouting() {
-    val config = readServerConfig()
-    val catalogRepository: CatalogRepository = FileCatalogRepository(config.mediaDir)
-
+fun Application.configureRouting(repository: CatalogRepository, mediaDir: File) {
     routing {
         get("/health") {
             val response = HealthResponse(
                 status = Status.OK,
-                videos = catalogRepository.getAllVideos().size
+                videos = repository.getAllVideos().size
             )
             call.respond(response)
         }
-        staticFiles(MEDIA_ROUTE, config.mediaDir) {
+        staticFiles(MEDIA_ROUTE, mediaDir) {
             enableAutoHeadResponse()
             contentType { file ->
                 when (file.extension) {
@@ -39,7 +37,7 @@ fun Application.configureRouting() {
             }
         }
         get("api/videos") {
-            val videos = catalogRepository.getAllVideos()
+            val videos = repository.getAllVideos()
 
             val posterRoot =
                 "${call.request.absoluteRoute()}$MEDIA_ROUTE"
@@ -52,7 +50,7 @@ fun Application.configureRouting() {
         get("/api/videos/{id}") {
             val paramId = call.parameters.getOrFail("id")
 
-            val video = catalogRepository.getVideoById(paramId)
+            val video = repository.getVideoById(paramId)
 
             video?.let { video ->
 
@@ -77,4 +75,10 @@ fun Application.configureRouting() {
 
         }
     }
+}
+
+fun Application.configureApi() {
+    val config = readServerConfig()
+    val repository: CatalogRepository = FileCatalogRepository(config.mediaDir)
+    configureRouting(repository, config.mediaDir)
 }
