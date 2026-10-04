@@ -1,8 +1,10 @@
 ktor:
   deployment:
-    port: 8080
+    port: "$BUFFERED_PORT:8080"
   application:
     modules:
       - com.angelma.SerializationKt.configureSerialization
       - com.angelma.StatusPagesKt.configureStatusPages
       - com.angelma.RoutingKt.configureRouting
+buffered:
+  mediaDir: "$BUFFERED_MEDIA_DIR:../media"
