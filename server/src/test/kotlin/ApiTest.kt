@@ -1,5 +1,6 @@
 package com.angelma
 
+import com.angelma.ext.Throttle
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -18,7 +19,8 @@ class ApiTest {
             configureStatusPages()
             configureRouting(
                 FakeCatalogRepository(),
-                File("build/tmp")
+                File("build/tmp"),
+                Throttle()
             )
         }
     }

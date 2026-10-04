@@ -9,3 +9,4 @@ ktor:
       - com.angelma.CallLoggingKt.configureCallLogging
 buffered:
   mediaDir: "$BUFFERED_MEDIA_DIR:../media"
+  demo: "$BUFFERED_DEMO:false"

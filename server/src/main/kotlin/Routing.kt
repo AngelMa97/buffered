@@ -1,7 +1,9 @@
 package com.angelma
 
+import com.angelma.Constants.INVALID_MBPS
 import com.angelma.Constants.MEDIA_ROUTE
 import com.angelma.Constants.VIDEO_NOT_FOUND
+import com.angelma.ext.Throttle
 import com.angelma.ext.absoluteRoute
 import com.angelma.mappers.toVideoDto
 import com.angelma.mappers.toVideoSummaryDto
@@ -14,11 +16,12 @@ import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
+import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
 import java.io.File
 
-fun Application.configureRouting(repository: CatalogRepository, mediaDir: File) {
+fun Application.configureRouting(repository: CatalogRepository, mediaDir: File, throttle: Throttle) {
     routing {
         get("/health") {
             val response = HealthResponse(
@@ -74,11 +77,26 @@ fun Application.configureRouting(repository: CatalogRepository, mediaDir: File) 
             )
 
         }
+        put("/demo/throttle") {
+            val callMbps = call.request.queryParameters["mbps"]?.toDoubleOrNull()
+            if (callMbps != null && !callMbps.isNaN() && callMbps >= 0.0) {
+                throttle.mbps = callMbps
+                call.respond(mapOf("mbps" to callMbps))
+            } else {
+                call.respond(
+                    HttpStatusCode.BadRequest, ErrorResponse(
+                        error = INVALID_MBPS,
+                        message = "Please enter a number equal or bigger than 0.0"
+                    )
+                )
+            }
+        }
     }
 }
 
 fun Application.configureApi() {
     val config = readServerConfig()
     val repository: CatalogRepository = FileCatalogRepository(config.mediaDir)
-    configureRouting(repository, config.mediaDir)
+    val throttle = Throttle()
+    configureRouting(repository, config.mediaDir, throttle)
 }
