@@ -1,0 +1,75 @@
+{
+  "_comment": "Fuentes del catálogo. Cada video necesita licencia verificada antes de entrar. 'zip_member' indica qué archivo sacar si la descarga es un .zip.",
+  "videos": [
+    {
+      "id": "big-buck-bunny",
+      "title": "Big Buck Bunny",
+      "year": 2008,
+      "description": "A giant, gentle rabbit puts up with three bullying rodents until they go one step too far, and he plans his revenge. Blender Foundation's second open movie.",
+      "source_url": "https://download.blender.org/demo/movies/BBB/bbb_sunflower_1080p_30fps_normal.mp4.zip",
+      "zip_member": "bbb_sunflower_1080p_30fps_normal.mp4",
+      "poster_seconds": 50,
+      "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
+      "attribution": "(c) copyright 2008, Blender Foundation / www.bigbuckbunny.org"
+    },
+    {
+      "id": "sintel",
+      "title": "Sintel",
+      "year": 2010,
+      "description": "A lonely young woman searches the world for the baby dragon she once rescued and lost. Blender Foundation's third open movie.",
+      "source_url": "https://download.blender.org/durian/movies/Sintel.2010.1080p.mkv",
+      "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
+      "attribution": "(c) copyright Blender Foundation | durian.blender.org"
+    },
+    {
+      "id": "tears-of-steel",
+      "title": "Tears of Steel",
+      "year": 2012,
+      "description": "In a future Amsterdam, a group of scientists tries to save the world from destructive robots by recreating a single moment from the past. Blender Foundation's live-action and VFX open movie.",
+      "source_url": "https://download.blender.org/demo/movies/ToS/tears_of_steel_1080p.mov.zip",
+      "zip_member": "tears_of_steel_1080p.mov",
+      "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
+      "attribution": "(CC) Blender Foundation | mango.blender.org",
+      "notes": "Subtítulos disponibles en https://download.blender.org/demo/movies/ToS/subtitles/ (versión 2)."
+    },
+    {
+      "id": "elephants-dream",
+      "title": "Elephants Dream",
+      "year": 2006,
+      "description": "Two strange characters explore a capricious and seemingly infinite machine. The world's first open movie, made by the Blender community.",
+      "source_url": "https://download.blender.org/ED/ED_1024.avi",
+      "license": { "name": "CC BY 2.5", "url": "https://creativecommons.org/licenses/by/2.5/" },
+      "attribution": "(c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org"
+    },
+    {
+      "id": "night-of-the-living-dead",
+      "title": "Night of the Living Dead",
+      "year": 1968,
+      "description": "A group of strangers barricade themselves in a farmhouse to survive a night of attacks by the reanimated dead. George A. Romero's landmark horror film.",
+      "source_url": "https://archive.org/download/Night.Of.The.Living.Dead_1080p/NightOfTheLivingDead_720p.mp4",
+      "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
+      "attribution": "Night of the Living Dead (1968), dir. George A. Romero. Public domain (published without a copyright notice). Source: Internet Archive.",
+      "notes": "El archivo es 480p aunque se llame 720p: la escalera llega hasta 480p."
+    },
+    {
+      "id": "the-general",
+      "title": "The General",
+      "year": 1926,
+      "description": "When Union spies steal his beloved locomotive, a Southern railroad engineer chases them across enemy lines. Buster Keaton's silent comedy classic.",
+      "source_url": "https://archive.org/download/TheGeneral/The_General.mpeg",
+      "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
+      "attribution": "The General (1926), dir. Clyde Bruckman and Buster Keaton. Public domain in the United States. Source: Internet Archive.",
+      "notes": "Verificar que la música agregada en esta copia también sea de dominio público antes de publicar el repo."
+    },
+    {
+      "id": "the-immigrant",
+      "title": "The Immigrant",
+      "year": 1917,
+      "description": "The Tramp crosses the Atlantic to America, finds love on the voyage and gets into trouble over a single coin in a restaurant. A Charlie Chaplin short.",
+      "source_url": "https://archive.org/download/the-immigrant-1917_202304/The%20Immigrant%20%281917%29.mp4",
+      "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
+      "attribution": "The Immigrant (1917), dir. Charlie Chaplin. Public domain in the United States. Source: Internet Archive.",
+      "notes": "Copia sin pista de audio (verificado con ffprobe): no hay música agregada que revisar."
+    }
+  ]
+}

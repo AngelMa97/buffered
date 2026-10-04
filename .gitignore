@@ -1,0 +1,22 @@
+# Video generado por el pipeline (pesa gigas; se regenera con pipeline/pipeline.py)
+/media/
+# Videos fuente descargados
+/.cache/
+
+# Gradle / IDE
+.gradle/
+build/
+.idea/
+.kotlin/
+local.properties
+*.iml
+
+# Python
+__pycache__/
+.venv/
+
+# SO
+.DS_Store
+
+# Tutoriales de aprendizaje (notas personales, no se publican)
+TUTORIAL.md
