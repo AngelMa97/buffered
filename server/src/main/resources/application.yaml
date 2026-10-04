@@ -6,5 +6,6 @@ ktor:
       - com.angelma.SerializationKt.configureSerialization
       - com.angelma.StatusPagesKt.configureStatusPages
       - com.angelma.RoutingKt.configureRouting
+      - com.angelma.CallLoggingKt.configureCallLogging
 buffered:
   mediaDir: "$BUFFERED_MEDIA_DIR:../media"
