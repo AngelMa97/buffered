@@ -20,6 +20,7 @@ class ApiTest {
             configureRouting(
                 FakeCatalogRepository(),
                 File("build/tmp"),
+                true,
                 Throttle()
             )
         }

@@ -12,16 +12,23 @@ import com.angelma.responses.HealthResponse
 import com.angelma.responses.Status
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.defaultForFile
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
 import java.io.File
 
-fun Application.configureRouting(repository: CatalogRepository, mediaDir: File, throttle: Throttle) {
+fun Application.configureRouting(
+    repository: CatalogRepository,
+    mediaDir: File,
+    isDemo: Boolean,
+    throttle: Throttle
+) {
     routing {
         get("/health") {
             val response = HealthResponse(
@@ -30,12 +37,52 @@ fun Application.configureRouting(repository: CatalogRepository, mediaDir: File, 
             )
             call.respond(response)
         }
-        staticFiles(MEDIA_ROUTE, mediaDir) {
-            enableAutoHeadResponse()
-            contentType { file ->
-                when (file.extension) {
+        if (isDemo) {
+            put("/demo/throttle") {
+                val callMbps = call.request.queryParameters["mbps"]?.toDoubleOrNull()
+                if (callMbps != null && !callMbps.isNaN() && callMbps >= 0.0) {
+                    throttle.mbps = callMbps
+                    call.respond(mapOf("mbps" to callMbps))
+                } else {
+                    call.respond(
+                        HttpStatusCode.BadRequest, ErrorResponse(
+                            error = INVALID_MBPS,
+                            message = "Please enter a number equal or bigger than 0.0"
+                        )
+                    )
+                }
+            }
+            get("${MEDIA_ROUTE}/{path...}") {
+                val segments = call.parameters.getAll("path").orEmpty()
+                val file = resolveMediaFile(mediaDir, segments) ?: return@get call.respond(
+                    HttpStatusCode.NotFound
+                )
+
+                val type = when(file.extension) {
                     "ts" -> ContentType("video", "mp2t")
-                    else -> null
+                    else -> ContentType.defaultForFile(file)
+                }
+
+                call.respondOutputStream(type) {
+                    file.inputStream().use { input ->
+                        val buffer = ByteArray(16 * 1024)
+                        while (true) {
+                            val read = input.read(buffer)
+                            if (read == -1) break
+                            throttle.waitFor(read)
+                            write(buffer, 0, read)
+                        }
+                    }
+                }
+            }
+        } else {
+            staticFiles(MEDIA_ROUTE, mediaDir) {
+                enableAutoHeadResponse()
+                contentType { file ->
+                    when (file.extension) {
+                        "ts" -> ContentType("video", "mp2t")
+                        else -> null
+                    }
                 }
             }
         }
@@ -77,20 +124,6 @@ fun Application.configureRouting(repository: CatalogRepository, mediaDir: File, 
             )
 
         }
-        put("/demo/throttle") {
-            val callMbps = call.request.queryParameters["mbps"]?.toDoubleOrNull()
-            if (callMbps != null && !callMbps.isNaN() && callMbps >= 0.0) {
-                throttle.mbps = callMbps
-                call.respond(mapOf("mbps" to callMbps))
-            } else {
-                call.respond(
-                    HttpStatusCode.BadRequest, ErrorResponse(
-                        error = INVALID_MBPS,
-                        message = "Please enter a number equal or bigger than 0.0"
-                    )
-                )
-            }
-        }
     }
 }
 
@@ -98,5 +131,12 @@ fun Application.configureApi() {
     val config = readServerConfig()
     val repository: CatalogRepository = FileCatalogRepository(config.mediaDir)
     val throttle = Throttle()
-    configureRouting(repository, config.mediaDir, throttle)
+    configureRouting(repository, config.mediaDir, config.demoEnabled, throttle)
+}
+
+fun resolveMediaFile(mediaDir: File, segments: List<String>): File? {
+    val root = mediaDir.canonicalFile
+    val requested = File(root, segments.joinToString("/")).canonicalFile
+    return if (requested.startsWith("${root}/") && requested.isFile) requested
+    else null
 }
