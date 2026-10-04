@@ -7,8 +7,8 @@ data class Video(
     val description: String,
     val durationSeconds: Int,
     val master: String,
-    val posterUrl: String,
-    val backdropUrl: String,
+    val poster: String,
+    val backdrop: String,
     val license: License,
     val attribution: String,
     val renditions: List<Rendition>
