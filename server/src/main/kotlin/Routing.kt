@@ -1,5 +1,7 @@
 package com.angelma
 
+import com.angelma.responses.HealthResponse
+import com.angelma.responses.Status
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticFiles
@@ -9,9 +11,15 @@ import io.ktor.server.routing.routing
 
 fun Application.configureRouting() {
     val config = readServerConfig()
+    val catalogRepository: CatalogRepository = FileCatalogRepository(config.mediaDir)
+
     routing {
         get("/health") {
-            call.respond(mapOf("status" to "ok"))
+            val response = HealthResponse(
+                status = Status.OK,
+                videos = catalogRepository.getAllVideos().size
+            )
+            call.respond(response)
         }
         staticFiles("/media", config.mediaDir) {
             enableAutoHeadResponse()
