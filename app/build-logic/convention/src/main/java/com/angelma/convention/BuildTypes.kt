@@ -44,9 +44,9 @@ internal fun Project.configureBuildTypes(
 }
 
 private fun BuildType.configureDebugType() {
-    buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+    buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
 }
 
 private fun BuildType.configureReleaseType() {
-    buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+    buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
 }

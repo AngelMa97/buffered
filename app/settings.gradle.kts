@@ -26,3 +26,7 @@ dependencyResolutionManagement {
 rootProject.name = "Buffered-Client"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
+include(":core:domain")
+include(":core:presentation")
+include(":core:data")
+include(":core:design-system")
