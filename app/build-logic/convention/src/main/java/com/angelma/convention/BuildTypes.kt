@@ -6,6 +6,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import java.util.Properties
 
 internal fun Project.configureBuildTypes(
     commonExtension: CommonExtension,
@@ -14,28 +15,33 @@ internal fun Project.configureBuildTypes(
     commonExtension.run {
         buildFeatures.buildConfig = true
     }
+    val props = Properties()
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { props.load(it) }
+    val url = props.getProperty("BASE_URL", "\"http://10.0.2.2:8080\"")
     when (extensionType) {
         ExtensionType.APPLICATION -> {
             extensions.configure<ApplicationExtension> {
                 buildTypes {
                     debug {
-                        configureDebugType()
+                        configureDebugType(url)
                     }
                     release {
-                        configureReleaseType()
+                        configureReleaseType(url)
                         optimization.enable = true
                     }
                 }
             }
         }
+
         ExtensionType.LIBRARY -> {
             extensions.configure<LibraryExtension> {
                 buildTypes {
                     debug {
-                        configureDebugType()
+                        configureDebugType(url)
                     }
                     release {
-                        configureReleaseType()
+                        configureReleaseType(url)
                     }
                 }
             }
@@ -43,10 +49,10 @@ internal fun Project.configureBuildTypes(
     }
 }
 
-private fun BuildType.configureDebugType() {
-    buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
+private fun BuildType.configureDebugType(url: String) {
+    buildConfigField("String", "BASE_URL", url)
 }
 
-private fun BuildType.configureReleaseType() {
-    buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
+private fun BuildType.configureReleaseType(url: String) {
+    buildConfigField("String", "BASE_URL", url)
 }
