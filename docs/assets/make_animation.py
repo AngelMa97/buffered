@@ -37,7 +37,7 @@ CARD = (18, 24, 33)
 CARD_BORDE = (40, 50, 64)
 TEXTO = (232, 238, 245)
 TENUE = (138, 152, 170)
-ACENTO = (45, 212, 191)     # teal: identidad de Buffered
+ACENTO = (251, 146, 60)     # naranja #FB923C: identidad de Buffered
 CALIDAD_COLOR = {
     "1080p": (52, 211, 153),
     "720p": (96, 165, 250),
@@ -336,7 +336,8 @@ def cuadro(t, base_video):
     d.rounded_rectangle(s(bx1, by, bx2, by + 12), radius=6 * SS, fill=mezcla((34, 42, 54), a5))
     lleno = (bx2 - bx1) * buf / 30
     if lleno > 2:
-        col_b = ACENTO if buf > 8 else CALIDAD_COLOR["540p"]
+        # Salud del buffer en verde/ámbar: con el acento naranja, "lleno" y "bajo" no se distinguirían.
+        col_b = CALIDAD_COLOR["1080p"] if buf > 8 else CALIDAD_COLOR["540p"]
         d.rounded_rectangle(s(bx1, by, bx1 + lleno, by + 12), radius=6 * SS, fill=mezcla(col_b, a5))
 
     # Leyenda inferior (pasos)
