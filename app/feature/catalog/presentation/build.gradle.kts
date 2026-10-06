@@ -11,6 +11,10 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor3)
+
     implementation(projects.feature.catalog.domain)
     implementation(projects.core.domain)
+    implementation(projects.core.presentation)
 }
