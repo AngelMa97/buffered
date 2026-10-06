@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.rememberNavController
 import com.angelma.core.designsystem.BufferedTheme
 
 class MainActivity : ComponentActivity() {
@@ -62,9 +63,10 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Button(onClick = {}) {
-                            Text("Buffered working")
-                        }
+                        val navController = rememberNavController()
+                        NavigationRoot(
+                            navController = navController
+                        )
                     }
                 } else {
                     AlertDialog(

@@ -8,6 +8,7 @@ class AndroidFeatureConventionPlugin: Plugin<Project> {
         project.run {
             pluginManager.run {
                 apply("bufferedclient.android.library.compose")
+                apply("org.jetbrains.kotlin.plugin.serialization")
             }
 
             dependencies {

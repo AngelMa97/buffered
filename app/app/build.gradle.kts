@@ -16,7 +16,10 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.androidx.activity.compose)
 
-    implementation(libs.bundles.ktor)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.androidx.compose)
+
+    implementation(libs.androidx.navigation.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -26,4 +29,7 @@ dependencies {
     implementation(projects.core.presentation)
     implementation(projects.core.designSystem)
     implementation(projects.core.data)
+
+    implementation(projects.feature.player.presentation)
+    implementation(projects.feature.catalog.presentation)
 }

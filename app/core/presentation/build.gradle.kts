@@ -7,8 +7,8 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.compose.ui)                 // stringResource (UiText)
-    implementation(libs.androidx.lifecycle.runtime.compose)  // LocalLifecycleOwner, repeatOnLifecycle
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
