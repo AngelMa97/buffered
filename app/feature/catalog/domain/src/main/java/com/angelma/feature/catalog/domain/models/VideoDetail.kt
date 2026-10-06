@@ -12,4 +12,6 @@ data class VideoDetail(
     val license: License,
     val attribution: String,
     val renditions: List<Rendition>
-)
+) {
+    val isHd get() = renditions.any { it.name == "1080p" }
+}

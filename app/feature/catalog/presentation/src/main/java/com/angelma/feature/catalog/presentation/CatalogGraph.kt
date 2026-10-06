@@ -1,11 +1,9 @@
 package com.angelma.feature.catalog.presentation
 
-import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import androidx.navigation.toRoute
 import com.angelma.feature.catalog.presentation.catalog.CatalogScreenRoot
 import com.angelma.feature.catalog.presentation.detail.DetailScreenRoot
 import kotlinx.serialization.Serializable
@@ -29,16 +27,12 @@ fun NavGraphBuilder.catalogGraph(
                 },
             )
         }
-        composable<DetailScreenRoute> { backstackEntry ->
-            val args = backstackEntry.toRoute<DetailScreenRoute>()
-            val videoId = args.videoId
-
+        composable<DetailScreenRoute> {
             DetailScreenRoot(
                 onBack = { navController.navigateUp() },
                 onVideoPlay = { streamUrl, title ->
                     onPlay(streamUrl, title)
-                },
-                videoId = videoId
+                }
             )
         }
     }
