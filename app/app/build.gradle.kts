@@ -31,5 +31,7 @@ dependencies {
     implementation(projects.core.data)
 
     implementation(projects.feature.player.presentation)
+
     implementation(projects.feature.catalog.presentation)
+    implementation(projects.feature.catalog.data)
 }

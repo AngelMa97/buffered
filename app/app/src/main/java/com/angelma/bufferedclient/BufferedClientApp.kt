@@ -2,6 +2,8 @@ package com.angelma.bufferedclient
 
 import android.app.Application
 import com.angelma.bufferedclient.di.appModule
+import com.angelma.core.data.di.coreDataModule
+import com.angelma.feature.catalog.data.di.catalogDataModule
 import com.angelma.feature.catalog.presentation.di.catalogModule
 import com.angelma.feature.player.presentation.di.playerModule
 import org.koin.android.ext.koin.androidContext
@@ -17,7 +19,9 @@ class BufferedClientApp() : Application() {
             modules(
                 appModule,
                 catalogModule,
-                playerModule
+                playerModule,
+                coreDataModule,
+                catalogDataModule
             )
         }
     }

@@ -10,4 +10,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
+    implementation(projects.feature.catalog.domain)
+    implementation(projects.core.domain)
 }

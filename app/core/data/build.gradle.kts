@@ -7,7 +7,12 @@ android {
 }
 
 dependencies {
-    implementation(libs.bundles.ktor)
+    // api: las extensiones públicas (HttpClient.get, safeCall) usan HttpClient, Result y DataError
+    // en su firma, así que quien dependa de :core:data necesita ver esos tipos.
+    api(libs.ktor.client.core)
+    api(projects.core.domain)
 
-    implementation(projects.core.domain)
+    implementation(libs.bundles.ktor)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
 }
