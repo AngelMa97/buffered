@@ -6,6 +6,6 @@ data class PlayerState(
     val isPlaying: Boolean = true,
     val codecs: List<String> = emptyList(),
     val selectedCodec: String = "",
-    val renditions: List<String> = emptyList(),
-    val selectedRendition: String = ""
+    val renditions: List<QualityOption> = emptyList(),
+    val selectedRendition: QualityOption? = null
 )

@@ -5,4 +5,7 @@
     <string name="return_10s">Return 10s</string>
     <string name="next_10s">Next 10s</string>
     <string name="back">Back</string>
+    <string name="settings">Settings</string>
+    <string name="quality">Quality: %1$s</string>
+    <string name="auto">AUTO</string>
 </resources>
