@@ -8,6 +8,9 @@ android {
 
 dependencies {
     testImplementation(libs.junit)
+    testImplementation(libs.assertk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 
