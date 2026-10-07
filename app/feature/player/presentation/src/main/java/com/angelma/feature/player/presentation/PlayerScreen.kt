@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,7 +69,6 @@ import com.angelma.core.designsystem.Quality720
 import com.angelma.feature.player.presentation.components.SeekBar
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
-import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -200,7 +198,7 @@ fun PlayerUiControl(
                     ) {
                         Icon(
                             modifier = Modifier.size(30.dp),
-                            painter = painterResource(R.drawable.ic_back_arrow),
+                            painter = painterResource(com.angelma.core.presentation.R.drawable.ic_back_arrow),
                             contentDescription = stringResource(R.string.back)
                         )
                     }
