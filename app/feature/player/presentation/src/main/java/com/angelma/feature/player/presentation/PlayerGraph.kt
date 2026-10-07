@@ -21,12 +21,8 @@ fun NavGraphBuilder.playerGraph(navController: NavController) {
             }
 
             val args = entry.toRoute<PlayerGraph>()
-            val streamUrl = args.streamUrl
-            val title = args.title
             PlayerScreenRoot(
-                onBack = { navController.navigateUp() },
-                stream = streamUrl,
-                title = title
+                onBack = { navController.navigateUp() }
             )
         }
     }

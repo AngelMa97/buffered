@@ -21,7 +21,7 @@ class BufferedClientApp() : Application() {
                 catalogModule,
                 playerModule,
                 coreDataModule,
-                catalogDataModule
+                catalogDataModule,
             )
         }
     }
