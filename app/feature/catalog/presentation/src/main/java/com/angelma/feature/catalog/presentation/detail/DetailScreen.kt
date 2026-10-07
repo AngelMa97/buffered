@@ -25,6 +25,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.composed
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -171,6 +180,7 @@ private fun ColumnScope.DetailContent(
 ) {
     IconButton(
         modifier = Modifier
+            .staggeredEntrance(0)
             .padding(vertical = 16.dp)
             .size(150.dp)
             .align(Alignment.CenterHorizontally),
@@ -190,7 +200,9 @@ private fun ColumnScope.DetailContent(
         )
     }
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .staggeredEntrance(1)
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -199,9 +211,14 @@ private fun ColumnScope.DetailContent(
             fontSize = 24.sp
         )
     }
-    Text(text = detail.description)
+    Text(
+        modifier = Modifier.staggeredEntrance(2),
+        text = detail.description
+    )
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .staggeredEntrance(3)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         Text(text = stringResource(R.string.year, detail.year))
@@ -213,13 +230,31 @@ private fun ColumnScope.DetailContent(
         )
     }
     Text(
+        modifier = Modifier.staggeredEntrance(4),
         text = detail.license.name,
         fontSize = 12.sp
     )
     Text(
+        modifier = Modifier.staggeredEntrance(5),
         text = detail.attribution,
         fontSize = 12.sp
     )
+}
+
+/**
+ * Fades the element in and slides it up a little, [index] × 60 ms after it first appears, so the
+ * detail content arrives in a cascade instead of all at once.
+ */
+private fun Modifier.staggeredEntrance(index: Int): Modifier = composed {
+    var started by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { started = true }
+    val spec = tween<Float>(durationMillis = 300, delayMillis = index * 60)
+    val alpha by animateFloatAsState(if (started) 1f else 0f, spec, label = "entranceAlpha")
+    val offsetY by animateFloatAsState(if (started) 0f else 24f, spec, label = "entranceOffset")
+    graphicsLayer {
+        this.alpha = alpha
+        translationY = offsetY * density
+    }
 }
 
 @Preview(showBackground = true)
