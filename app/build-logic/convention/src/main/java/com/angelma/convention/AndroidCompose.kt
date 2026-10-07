@@ -7,7 +7,7 @@ import org.gradle.kotlin.dsl.dependencies
 internal fun Project.configureAndroidCompose(
     commonExtension: CommonExtension
 ) {
-    // El compilador de Compose es un plugin de Kotlin aparte desde Kotlin 2.0.
+    // Since Kotlin 2.0 the Compose compiler is a separate Kotlin plugin.
     pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 
     commonExtension.buildFeatures.compose = true

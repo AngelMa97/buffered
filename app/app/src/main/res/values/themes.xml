@@ -1,5 +1,5 @@
 <resources>
-    <!-- Lo que se pinta antes de que Compose dibuje: fondo oscuro para que no haya destello. -->
+    <!-- Painted before Compose draws its first frame: dark background so there is no flash. -->
     <style name="Theme.BufferedClient" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/buffered_background</item>
     </style>

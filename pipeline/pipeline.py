@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""Buffered pipeline: video fuente -> escalera HLS + póster + metadatos + catálogo.
+"""Buffered pipeline: source video -> HLS ladder + poster + metadata + catalog.
 
-Para cada video de videos.json:
-  1. Descarga la fuente a .cache/sources/ (y la extrae si es .zip). Se reutiliza si ya existe.
-  2. Inspecciona la fuente con ffprobe (resolución, fps, duración, si trae audio).
-  3. Codifica las calidades de la escalera que NO superen la resolución de la fuente
-     (no se inventan calidades: una fuente de 480p genera una escalera hasta 480p).
-  4. Escribe master.m3u8 con BANDWIDTH/AVERAGE-BANDWIDTH medidos de los segmentos reales.
-  5. Genera poster.jpg (miniatura) y backdrop.jpg (imagen grande para el detalle).
-  6. Escribe metadata.json del video y, al final, media/catalog.json con todo el catálogo.
+For every video in videos.json:
+  1. Downloads the source to .cache/sources/ (and extracts it if it's a .zip). Reused if present.
+  2. Inspects the source with ffprobe (resolution, fps, duration, whether it has audio).
+  3. Encodes the ladder qualities that do NOT exceed the source resolution
+     (no invented qualities: a 480p source gets a ladder up to 480p).
+  4. Writes master.m3u8 with BANDWIDTH/AVERAGE-BANDWIDTH measured from the real segments.
+  5. Generates poster.jpg (thumbnail) and backdrop.jpg (large image for the detail screen).
+  6. Writes the video's metadata.json and, at the end, media/catalog.json with the whole catalog.
 
-Uso:
-  python3 pipeline/pipeline.py                      # todos los videos
-  python3 pipeline/pipeline.py big-buck-bunny       # solo algunos (por id)
-  python3 pipeline/pipeline.py --max-seconds 60     # solo los primeros 60 s (pruebas rápidas)
-  python3 pipeline/pipeline.py --force              # rehace aunque ya exista la salida
+Usage:
+  python3 pipeline/pipeline.py                      # every video
+  python3 pipeline/pipeline.py big-buck-bunny       # only some (by id)
+  python3 pipeline/pipeline.py --max-seconds 60     # only the first 60 s (quick tests)
+  python3 pipeline/pipeline.py --force              # redo even if the output exists
 
-Solo usa la biblioteca estándar de Python + ffmpeg/ffprobe.
+Uses only the Python standard library + ffmpeg/ffprobe.
 """
 import argparse
 import json
@@ -30,266 +30,267 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parent.parent
-VIDEOS_JSON = RAIZ / "pipeline" / "videos.json"
-CACHE = RAIZ / ".cache" / "sources"
-MEDIA = RAIZ / "media"
+ROOT = Path(__file__).resolve().parent.parent
+VIDEOS_JSON = ROOT / "pipeline" / "videos.json"
+CACHE = ROOT / ".cache" / "sources"
+MEDIA = ROOT / "media"
 
-# Escalera ABR como "cajas": cada calidad es el tamaño máximo en el que cabe el video respetando su
-# proporción. Así una película panorámica de 1920×818 es "1080p" (1920×818) y no se queda sin escalón,
-# como pasaría comparando solo el alto. Escalones de ~1.6-1.8x entre calidades (lección del lab 04/05:
-# con saltos de 3x el ABR se salta calidades).
-ESCALERA = [
-    # nombre, caja ancho, caja alto, bitrate video, nivel H.264, código CODECS
+# ABR ladder as "boxes": each quality is the largest size the video fits in while keeping its
+# aspect ratio. That way a 1920×818 widescreen film is "1080p" (1920×818) and doesn't lose its rung,
+# as it would when comparing height alone. Steps of ~1.6-1.8x between qualities (lesson from labs
+# 04/05: with 3x jumps ABR skips qualities).
+LADDER = [
+    # name, box width, box height, video bitrate, H.264 level, CODECS string
     ("1080p", 1920, 1080, "5000k", "4.0", "avc1.640028"),
     ("720p",  1280,  720, "2800k", "3.1", "avc1.64001f"),
     ("540p",   960,  540, "1600k", "3.1", "avc1.64001f"),
     ("480p",   854,  480, "1200k", "3.0", "avc1.64001e"),
     ("360p",   640,  360,  "800k", "3.0", "avc1.64001e"),
 ]
-SEGMENTO_S = 4          # duración de cada segmento HLS
-GOP_S = 2               # un keyframe cada 2 s, alineado en todas las calidades
+SEGMENT_S = 4           # duration of each HLS segment
+GOP_S = 2               # one keyframe every 2 s, aligned across all qualities
 AUDIO = ["-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", "48000"]
-CODEC_AUDIO = "mp4a.40.2"
+AUDIO_CODEC = "mp4a.40.2"
 
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
-def correr(cmd):
-    resultado = subprocess.run(cmd, stdin=subprocess.DEVNULL, capture_output=True, text=True)
-    if resultado.returncode != 0:
-        sys.stderr.write(resultado.stderr[-3000:])
-        raise RuntimeError(f"Falló: {' '.join(cmd[:6])} ...")
-    return resultado.stdout
+def run(cmd):
+    result = subprocess.run(cmd, stdin=subprocess.DEVNULL, capture_output=True, text=True)
+    if result.returncode != 0:
+        sys.stderr.write(result.stderr[-3000:])
+        raise RuntimeError(f"Failed: {' '.join(cmd[:6])} ...")
+    return result.stdout
 
 
-# --- 1. Descarga ------------------------------------------------------------------------------
+# --- 1. Download ------------------------------------------------------------------------------
 
-def descargar(video):
+def download(video):
     CACHE.mkdir(parents=True, exist_ok=True)
     url = video["source_url"]
-    nombre = urllib.request.unquote(url.rsplit("/", 1)[-1])
-    destino = CACHE / nombre
-    if not destino.exists():
-        log(f"  descargando {nombre} ...")
-        parcial = destino.with_suffix(destino.suffix + ".part")
-        # Algunos servidores (download.blender.org) rechazan con 403 el User-Agent por defecto de urllib.
-        peticion = urllib.request.Request(url, headers={"User-Agent": "buffered-pipeline/1.0 (+ffmpeg)"})
-        with urllib.request.urlopen(peticion) as resp, open(parcial, "wb") as f:
+    name = urllib.request.unquote(url.rsplit("/", 1)[-1])
+    target = CACHE / name
+    if not target.exists():
+        log(f"  downloading {name} ...")
+        partial = target.with_suffix(target.suffix + ".part")
+        # Some servers (download.blender.org) reject urllib's default User-Agent with a 403.
+        request = urllib.request.Request(url, headers={"User-Agent": "buffered-pipeline/1.0 (+ffmpeg)"})
+        with urllib.request.urlopen(request) as resp, open(partial, "wb") as f:
             shutil.copyfileobj(resp, f, length=1024 * 1024)
-        parcial.rename(destino)
+        partial.rename(target)
     if "zip_member" not in video:
-        return destino
-    extraido = CACHE / video["zip_member"]
-    if not extraido.exists():
-        log(f"  extrayendo {video['zip_member']} ...")
-        with zipfile.ZipFile(destino) as z:
-            miembro = next(n for n in z.namelist() if n.endswith(video["zip_member"]))
-            with z.open(miembro) as src, open(extraido, "wb") as dst:
+        return target
+    extracted = CACHE / video["zip_member"]
+    if not extracted.exists():
+        log(f"  extracting {video['zip_member']} ...")
+        with zipfile.ZipFile(target) as z:
+            member = next(n for n in z.namelist() if n.endswith(video["zip_member"]))
+            with z.open(member) as src, open(extracted, "wb") as dst:
                 shutil.copyfileobj(src, dst, length=1024 * 1024)
-    return extraido
+    return extracted
 
 
-# --- 2. Inspección ----------------------------------------------------------------------------
+# --- 2. Inspection ----------------------------------------------------------------------------
 
-def inspeccionar(fuente):
-    datos = json.loads(correr([
+def inspect(source):
+    data = json.loads(run([
         "ffprobe", "-v", "error", "-print_format", "json",
-        "-show_streams", "-show_format", str(fuente),
+        "-show_streams", "-show_format", str(source),
     ]))
-    video = next(s for s in datos["streams"] if s["codec_type"] == "video")
+    video = next(s for s in data["streams"] if s["codec_type"] == "video")
     num, den = (int(x) for x in video.get("avg_frame_rate", "0/1").split("/"))
     fps = num / den if den else 0
     if not fps:
         num, den = (int(x) for x in video["r_frame_rate"].split("/"))
         fps = num / den
-    # Ancho visible considerando el aspecto de pixel (SAR): algunas fuentes SD no son píxel cuadrado.
+    # Display width taking the sample aspect ratio (SAR) into account: some SD sources don't have
+    # square pixels.
     sar = video.get("sample_aspect_ratio", "1:1")
     sn, sd = (int(x) for x in sar.split(":")) if sar not in ("0:1", "N/A") else (1, 1)
-    ancho = round(video["width"] * sn / sd)
+    width = round(video["width"] * sn / sd)
     return {
-        "ancho": ancho,
-        "alto": video["height"],
+        "width": width,
+        "height": video["height"],
         "fps": fps,
-        "duracion": float(datos["format"]["duration"]),
-        "tiene_audio": any(s["codec_type"] == "audio" for s in datos["streams"]),
+        "duration": float(data["format"]["duration"]),
+        "has_audio": any(s["codec_type"] == "audio" for s in data["streams"]),
     }
 
 
-# --- 3. Codificación de la escalera -----------------------------------------------------------
+# --- 3. Ladder encoding -----------------------------------------------------------------------
 
-def elegir_escalones(info):
-    """Calidades a generar: las cajas que la fuente llena en ancho o en alto. Nunca se escala hacia arriba."""
-    sw, sh = info["ancho"], info["alto"]
+def pick_rungs(info):
+    """Qualities to generate: the boxes the source fills in width or height. Never upscales."""
+    sw, sh = info["width"], info["height"]
     hd = sw >= 960 or sh >= 540
-    escalones = [e for e in ESCALERA if sw >= e[1] or sh >= e[2]]
+    rungs = [r for r in LADDER if sw >= r[1] or sh >= r[2]]
     if hd:
-        # 480p solo existe para fuentes SD: con fuentes HD quedaría pegado a 540p.
-        escalones = [e for e in escalones if e[0] != "480p"]
-    elif not escalones or sh > escalones[0][2]:
-        # Fuente SD rara (p. ej. 608×448): se agrega su resolución nativa como calidad máxima,
-        # para no tirar resolución bajándola a 360p.
-        escalones.insert(0, (f"{sh}p", sw, sh, "1200k", "3.0", "avc1.64001e"))
-    return escalones or [ESCALERA[-1]]
+        # 480p only exists for SD sources: with HD sources it would sit right next to 540p.
+        rungs = [r for r in rungs if r[0] != "480p"]
+    elif not rungs or sh > rungs[0][2]:
+        # Odd SD source (e.g. 608×448): add its native resolution as the top quality, so it isn't
+        # thrown away by scaling it down to 360p.
+        rungs.insert(0, (f"{sh}p", sw, sh, "1200k", "3.0", "avc1.64001e"))
+    return rungs or [LADDER[-1]]
 
 
-def codificar(fuente, info, salida, max_segundos):
-    resultado = []
-    for nombre, caja_w, caja_h, bitrate, nivel, codecs in elegir_escalones(info):
-        carpeta = salida / nombre
-        carpeta.mkdir(parents=True, exist_ok=True)
-        log(f"  codificando {nombre} ({bitrate}) ...")
+def encode(source, info, output, max_seconds):
+    renditions = []
+    for name, box_w, box_h, bitrate, level, codecs in pick_rungs(info):
+        folder = output / name
+        folder.mkdir(parents=True, exist_ok=True)
+        log(f"  encoding {name} ({bitrate}) ...")
         bufsize = f"{int(bitrate[:-1]) * 2}k"
-        cmd = ["ffmpeg", "-hide_banner", "-y", "-i", str(fuente)]
-        if max_segundos:
-            cmd += ["-t", str(max_segundos)]
+        cmd = ["ffmpeg", "-hide_banner", "-y", "-i", str(source)]
+        if max_seconds:
+            cmd += ["-t", str(max_seconds)]
         cmd += [
             "-map", "0:v:0",
-            *(["-map", "0:a:0"] if info["tiene_audio"] else []),
-            # Cabe en la caja sin deformar; dimensiones pares (H.264 4:2:0); píxel cuadrado.
-            "-vf", (f"scale=w={caja_w}:h={caja_h}:force_original_aspect_ratio=decrease:flags=lanczos,"
+            *(["-map", "0:a:0"] if info["has_audio"] else []),
+            # Fits the box without distortion; even dimensions (H.264 4:2:0); square pixels.
+            "-vf", (f"scale=w={box_w}:h={box_h}:force_original_aspect_ratio=decrease:flags=lanczos,"
                     "scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1,format=yuv420p"),
-            "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-level", nivel,
+            "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-level", level,
             "-b:v", bitrate, "-maxrate", bitrate, "-bufsize", bufsize,
-            # Keyframe cada GOP_S segundos por tiempo, no por número de frames: así queda alineado
-            # entre calidades sin importar los fps de la fuente. sc_threshold 0 evita keyframes extra.
+            # A keyframe every GOP_S seconds by time, not by frame count: that keeps it aligned across
+            # qualities whatever the source fps. sc_threshold 0 prevents extra keyframes.
             "-force_key_frames", f"expr:gte(t,n_forced*{GOP_S})", "-sc_threshold", "0",
-            *(AUDIO if info["tiene_audio"] else ["-an"]),
-            "-f", "hls", "-hls_time", str(SEGMENTO_S), "-hls_playlist_type", "vod",
-            "-hls_segment_filename", str(carpeta / "seg_%04d.ts"),
-            str(carpeta / "index.m3u8"),
+            *(AUDIO if info["has_audio"] else ["-an"]),
+            "-f", "hls", "-hls_time", str(SEGMENT_S), "-hls_playlist_type", "vod",
+            "-hls_segment_filename", str(folder / "seg_%04d.ts"),
+            str(folder / "index.m3u8"),
         ]
-        correr(cmd)
-        pico, promedio, ancho_real, alto_real = medir(carpeta)
-        resultado.append({
-            "name": nombre, "width": ancho_real, "height": alto_real,
-            "peakBandwidth": pico, "averageBandwidth": promedio,
-            "codecs": codecs + (f",{CODEC_AUDIO}" if info["tiene_audio"] else ""),
-            "playlist": f"{nombre}/index.m3u8",
+        run(cmd)
+        peak, average, real_width, real_height = measure(folder)
+        renditions.append({
+            "name": name, "width": real_width, "height": real_height,
+            "peakBandwidth": peak, "averageBandwidth": average,
+            "codecs": codecs + (f",{AUDIO_CODEC}" if info["has_audio"] else ""),
+            "playlist": f"{name}/index.m3u8",
         })
-    return resultado
+    return renditions
 
 
-def medir(carpeta):
-    """Bitrate pico y promedio reales (bits/s) a partir de los segmentos y sus duraciones."""
-    lineas = (carpeta / "index.m3u8").read_text().splitlines()
-    pico = total_bits = total_s = 0
+def measure(folder):
+    """Real peak and average bitrate (bits/s) from the segments and their durations."""
+    lines = (folder / "index.m3u8").read_text().splitlines()
+    peak = total_bits = total_s = 0
     dur = None
-    for l in lineas:
-        if l.startswith("#EXTINF:"):
-            dur = float(l[8:].split(",")[0])
-        elif l.endswith(".ts") and dur:
-            bits = (carpeta / l).stat().st_size * 8
-            pico = max(pico, bits / dur)
+    for line in lines:
+        if line.startswith("#EXTINF:"):
+            dur = float(line[8:].split(",")[0])
+        elif line.endswith(".ts") and dur:
+            bits = (folder / line).stat().st_size * 8
+            peak = max(peak, bits / dur)
             total_bits += bits
             total_s += dur
-    primer_seg = next(l for l in lineas if l.endswith(".ts"))
-    stream = json.loads(correr([
+    first_segment = next(line for line in lines if line.endswith(".ts"))
+    stream = json.loads(run([
         "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
-        "-print_format", "json", str(carpeta / primer_seg),
+        "-print_format", "json", str(folder / first_segment),
     ]))["streams"][0]
-    # Redondeo hacia arriba a 10 kb/s: BANDWIDTH debe ser >= el pico real.
-    return math.ceil(pico / 10_000) * 10_000, round(total_bits / total_s), stream["width"], stream["height"]
+    # Rounded up to 10 kb/s: BANDWIDTH must be >= the real peak.
+    return math.ceil(peak / 10_000) * 10_000, round(total_bits / total_s), stream["width"], stream["height"]
 
 
-def escribir_maestra(salida, calidades):
-    lineas = ["#EXTM3U", "#EXT-X-VERSION:3", "#EXT-X-INDEPENDENT-SEGMENTS"]
-    for c in calidades:  # de mayor a menor, como en ESCALERA
-        lineas.append(
-            f"#EXT-X-STREAM-INF:BANDWIDTH={c['peakBandwidth']},AVERAGE-BANDWIDTH={c['averageBandwidth']},"
-            f"RESOLUTION={c['width']}x{c['height']},CODECS=\"{c['codecs']}\""
+def write_master(output, renditions):
+    lines = ["#EXTM3U", "#EXT-X-VERSION:3", "#EXT-X-INDEPENDENT-SEGMENTS"]
+    for r in renditions:  # highest to lowest, as in LADDER
+        lines.append(
+            f"#EXT-X-STREAM-INF:BANDWIDTH={r['peakBandwidth']},AVERAGE-BANDWIDTH={r['averageBandwidth']},"
+            f"RESOLUTION={r['width']}x{r['height']},CODECS=\"{r['codecs']}\""
         )
-        lineas.append(c["playlist"])
-    (salida / "master.m3u8").write_text("\n".join(lineas) + "\n")
+        lines.append(r["playlist"])
+    (output / "master.m3u8").write_text("\n".join(lines) + "\n")
 
 
-# --- 4. Imágenes ------------------------------------------------------------------------------
+# --- 4. Images --------------------------------------------------------------------------------
 
-def imagenes(video, fuente, info, salida, max_segundos):
-    duracion = min(info["duracion"], max_segundos) if max_segundos else info["duracion"]
-    # "poster_seconds" en videos.json elige el cuadro a mano; si no, el 20% suele evitar
-    # créditos y negros del inicio.
-    instante = video.get("poster_seconds")
-    if instante is None or instante >= duracion:
-        instante = duracion * 0.2
-    instante = f"{instante:.1f}"
-    for nombre, ancho in (("poster.jpg", 640), ("backdrop.jpg", 1280)):
-        correr([
-            "ffmpeg", "-hide_banner", "-y", "-ss", instante, "-i", str(fuente), "-frames:v", "1",
-            "-vf", f"scale={ancho}:-2:flags=lanczos,setsar=1", "-q:v", "3", str(salida / nombre),
+def images(video, source, info, output, max_seconds):
+    duration = min(info["duration"], max_seconds) if max_seconds else info["duration"]
+    # "poster_seconds" in videos.json picks the frame by hand; otherwise 20% in usually skips the
+    # opening credits and black frames.
+    at = video.get("poster_seconds")
+    if at is None or at >= duration:
+        at = duration * 0.2
+    at = f"{at:.1f}"
+    for name, width in (("poster.jpg", 640), ("backdrop.jpg", 1280)):
+        run([
+            "ffmpeg", "-hide_banner", "-y", "-ss", at, "-i", str(source), "-frames:v", "1",
+            "-vf", f"scale={width}:-2:flags=lanczos,setsar=1", "-q:v", "3", str(output / name),
         ])
 
 
-# --- Orquestación -----------------------------------------------------------------------------
+# --- Orchestration ----------------------------------------------------------------------------
 
-def procesar(video, max_segundos, forzar):
-    salida = MEDIA / video["id"]
-    meta_path = salida / "metadata.json"
-    if meta_path.exists() and not forzar:
-        log(f"{video['id']}: ya existe, se reutiliza (usa --force para rehacer)")
+def process(video, max_seconds, force):
+    output = MEDIA / video["id"]
+    meta_path = output / "metadata.json"
+    if meta_path.exists() and not force:
+        log(f"{video['id']}: already exists, reusing it (use --force to redo)")
         return json.loads(meta_path.read_text())
-    log(f"{video['id']}: procesando")
-    fuente = descargar(video)
-    info = inspeccionar(fuente)
-    log(f"  fuente: {info['ancho']}x{info['alto']} @ {info['fps']:.2f} fps, "
-        f"{info['duracion'] / 60:.1f} min, audio={'sí' if info['tiene_audio'] else 'no'}")
-    if salida.exists():
-        shutil.rmtree(salida)
-    salida.mkdir(parents=True)
-    calidades = codificar(fuente, info, salida, max_segundos)
-    escribir_maestra(salida, calidades)
-    imagenes(video, fuente, info, salida, max_segundos)
-    duracion = min(info["duracion"], max_segundos) if max_segundos else info["duracion"]
+    log(f"{video['id']}: processing")
+    source = download(video)
+    info = inspect(source)
+    log(f"  source: {info['width']}x{info['height']} @ {info['fps']:.2f} fps, "
+        f"{info['duration'] / 60:.1f} min, audio={'yes' if info['has_audio'] else 'no'}")
+    if output.exists():
+        shutil.rmtree(output)
+    output.mkdir(parents=True)
+    renditions = encode(source, info, output, max_seconds)
+    write_master(output, renditions)
+    images(video, source, info, output, max_seconds)
+    duration = min(info["duration"], max_seconds) if max_seconds else info["duration"]
     meta = {
         "id": video["id"],
         "title": video["title"],
         "year": video["year"],
         "description": video["description"],
-        "durationSeconds": round(duracion),
+        "durationSeconds": round(duration),
         "license": video["license"],
         "attribution": video["attribution"],
         "sourceUrl": video["source_url"],
         "master": "master.m3u8",
         "poster": "poster.jpg",
         "backdrop": "backdrop.jpg",
-        "renditions": calidades,
-        "trimmedForTesting": bool(max_segundos),
+        "renditions": renditions,
+        "trimmedForTesting": bool(max_seconds),
     }
     meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n")
-    log(f"  listo: {', '.join(c['name'] for c in calidades)}")
+    log(f"  done: {', '.join(r['name'] for r in renditions)}")
     return meta
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("ids", nargs="*", help="ids de videos a procesar (por defecto, todos)")
-    p.add_argument("--max-seconds", type=int, default=0, help="procesar solo los primeros N segundos")
-    p.add_argument("--force", action="store_true", help="rehacer aunque ya exista la salida")
+    p.add_argument("ids", nargs="*", help="ids of the videos to process (default: all)")
+    p.add_argument("--max-seconds", type=int, default=0, help="process only the first N seconds")
+    p.add_argument("--force", action="store_true", help="redo even if the output already exists")
     args = p.parse_args()
 
-    for herramienta in ("ffmpeg", "ffprobe"):
-        if not shutil.which(herramienta):
-            sys.exit(f"Falta {herramienta} en el PATH")
+    for tool in ("ffmpeg", "ffprobe"):
+        if not shutil.which(tool):
+            sys.exit(f"{tool} is missing from PATH")
 
     videos = json.loads(VIDEOS_JSON.read_text())["videos"]
     if args.ids:
-        desconocidos = set(args.ids) - {v["id"] for v in videos}
-        if desconocidos:
-            sys.exit(f"ids desconocidos: {', '.join(sorted(desconocidos))}")
+        unknown = set(args.ids) - {v["id"] for v in videos}
+        if unknown:
+            sys.exit(f"unknown ids: {', '.join(sorted(unknown))}")
         videos = [v for v in videos if v["id"] in args.ids]
 
     for v in videos:
-        procesar(v, args.max_seconds, args.force)
+        process(v, args.max_seconds, args.force)
 
-    # El catálogo siempre se reconstruye con todo lo que haya en media/, en el orden de videos.json.
-    orden = [v["id"] for v in json.loads(VIDEOS_JSON.read_text())["videos"]]
-    entradas = [json.loads((MEDIA / i / "metadata.json").read_text())
-                for i in orden if (MEDIA / i / "metadata.json").exists()]
-    catalogo = {"generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"), "videos": entradas}
-    (MEDIA / "catalog.json").write_text(json.dumps(catalogo, indent=2, ensure_ascii=False) + "\n")
-    log(f"catalog.json: {len(entradas)} videos")
+    # The catalog is always rebuilt from everything in media/, in the order of videos.json.
+    order = [v["id"] for v in json.loads(VIDEOS_JSON.read_text())["videos"]]
+    entries = [json.loads((MEDIA / i / "metadata.json").read_text())
+               for i in order if (MEDIA / i / "metadata.json").exists()]
+    catalog = {"generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"), "videos": entries}
+    (MEDIA / "catalog.json").write_text(json.dumps(catalog, indent=2, ensure_ascii=False) + "\n")
+    log(f"catalog.json: {len(entries)} videos")
 
 
 if __name__ == "__main__":

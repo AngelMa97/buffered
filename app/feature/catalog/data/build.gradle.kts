@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.buffered.client.android.library)
-    alias(libs.plugins.kotlin.serialization)  // genera el código de @Serializable en los DTOs
+    alias(libs.plugins.kotlin.serialization)  // generates the @Serializable code for the DTOs
 }
 
 android {
@@ -15,8 +15,8 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.feature.catalog.domain)
 
-    // Tests del repositorio con MockEngine: el cliente de prueba necesita las mismas piezas de Ktor
-    // que el real (content negotiation + JSON), que :core:data tiene como implementation.
+    // Repository tests with MockEngine: the test client needs the same Ktor pieces as the real one
+    // (content negotiation + JSON), which :core:data only has as implementation.
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.ktor.client.mock)

@@ -13,7 +13,7 @@ val Inter = FontFamily(
 
 private val base = Typography()
 
-// Mismos tamaños y pesos que Material 3; solo cambia la familia, en los 15 estilos.
+// Same sizes and weights as Material 3; only the font family changes, across all 15 styles.
 val Typography = Typography(
     displayLarge = base.displayLarge.copy(fontFamily = Inter),
     displayMedium = base.displayMedium.copy(fontFamily = Inter),

@@ -1,5 +1,5 @@
 {
-  "_comment": "Fuentes del catálogo. Cada video necesita licencia verificada antes de entrar. 'zip_member' indica qué archivo sacar si la descarga es un .zip.",
+  "_comment": "Catalog sources. Every video needs a verified license before it goes in. 'zip_member' says which file to extract when the download is a .zip.",
   "videos": [
     {
       "id": "big-buck-bunny",
@@ -30,7 +30,7 @@
       "zip_member": "tears_of_steel_1080p.mov",
       "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
       "attribution": "(CC) Blender Foundation | mango.blender.org",
-      "notes": "Subtítulos disponibles en https://download.blender.org/demo/movies/ToS/subtitles/ (versión 2)."
+      "notes": "Subtitles available at https://download.blender.org/demo/movies/ToS/subtitles/ (version 2)."
     },
     {
       "id": "elephants-dream",
@@ -49,7 +49,7 @@
       "source_url": "https://archive.org/download/Night.Of.The.Living.Dead_1080p/NightOfTheLivingDead_720p.mp4",
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "Night of the Living Dead (1968), dir. George A. Romero. Public domain (published without a copyright notice). Source: Internet Archive.",
-      "notes": "El archivo es 480p aunque se llame 720p: la escalera llega hasta 480p."
+      "notes": "The file is 480p even though it's named 720p: the ladder tops out at 480p."
     },
     {
       "id": "the-general",
@@ -59,7 +59,7 @@
       "source_url": "https://archive.org/download/TheGeneral/The_General.mpeg",
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "The General (1926), dir. Clyde Bruckman and Buster Keaton. Public domain in the United States. Source: Internet Archive.",
-      "notes": "Verificar que la música agregada en esta copia también sea de dominio público antes de publicar el repo."
+      "notes": "Verify that the music added to this copy is also in the public domain before publishing the repo."
     },
     {
       "id": "the-immigrant",
@@ -69,7 +69,7 @@
       "source_url": "https://archive.org/download/the-immigrant-1917_202304/The%20Immigrant%20%281917%29.mp4",
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "The Immigrant (1917), dir. Charlie Chaplin. Public domain in the United States. Source: Internet Archive.",
-      "notes": "Copia sin pista de audio (verificado con ffprobe): no hay música agregada que revisar."
+      "notes": "Copy without an audio track (checked with ffprobe): no added music to review."
     }
   ]
 }
