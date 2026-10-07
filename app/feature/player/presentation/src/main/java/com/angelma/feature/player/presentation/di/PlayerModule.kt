@@ -28,6 +28,8 @@ val playerModule = module {
 
         ExoPlayer.Builder(androidContext())
             .setRenderersFactory(renderers)
+            .setSeekBackIncrementMs(10_000)
+            .setSeekForwardIncrementMs(10_000)
             .build()
     }
     viewModelOf(::PlayerViewModel)

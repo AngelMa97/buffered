@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
+    <string name="return_10s">Return 10s</string>
+    <string name="next_10s">Next 10s</string>
+    <string name="back">Back</string>
+</resources>
