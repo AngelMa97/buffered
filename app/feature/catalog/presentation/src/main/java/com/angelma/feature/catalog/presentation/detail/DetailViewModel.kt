@@ -18,9 +18,10 @@ class DetailViewModel(
     private val catalogRepository: CatalogRepository
 ) : ViewModel() {
 
-    private val videoId: String = savedStateHandle.toRoute<DetailScreenRoute>().videoId
+    private val route = savedStateHandle.toRoute<DetailScreenRoute>()
+    private val videoId: String = route.videoId
 
-    var state by mutableStateOf(DetailState())
+    var state by mutableStateOf(DetailState(videoId = route.videoId, posterUrl = route.posterUrl))
         private set
 
     init {

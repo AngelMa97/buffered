@@ -35,8 +35,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.compose.LocalPlatformContext
+import androidx.compose.foundation.layout.ColumnScope
 import com.angelma.core.designsystem.BufferedBackground
 import com.angelma.core.designsystem.BufferedTheme
+import com.angelma.core.presentation.sharedVideoImage
 import com.angelma.feature.catalog.domain.models.License
 import com.angelma.feature.catalog.domain.models.Rendition
 import com.angelma.feature.catalog.domain.models.VideoDetail
@@ -68,16 +72,80 @@ fun DetailScreen(
     onAction: (DetailAction) -> Unit,
     state: DetailState
 ) {
+    val detail = state.videoDetail
     Box(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
     ) {
-        if (state.isLoading) {
-            CircularProgressIndicator()
-        } else {
-            if (state.error != null) {
-                Column(
+        AsyncImage(
+            modifier = Modifier
+                .sharedVideoImage(state.videoId)
+                .fillMaxWidth(),
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(detail?.backdropUrl ?: state.posterUrl)
+                .placeholderMemoryCacheKey(state.posterUrl)
+                .build(),
+            contentDescription = detail?.title
+        )
+        if (detail?.isHd == true) {
+            SuggestionChip(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+                onClick = {},
+                label = {
+                    Text(
+                        text = stringResource(R.string.hd),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                colors = SuggestionChipDefaults.suggestionChipColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                )
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BufferedBackground.copy(alpha = 0.5f))
+                .padding(horizontal = 8.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TopAppBar(
+                title = {},
+                modifier = Modifier.fillMaxWidth(),
+                navigationIcon = {
+                    IconButton(
+                        onClick = { onAction(DetailAction.OnBackTap) }
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(25.dp),
+                            painter = painterResource(com.angelma.core.presentation.R.drawable.ic_back_arrow),
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0),
+            )
+            when {
+                state.isLoading -> Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 96.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+
+                state.error != null -> Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -89,128 +157,69 @@ fun DetailScreen(
                         onClick = { onAction(DetailAction.OnRequestVideoDetail) }
                     ) { Text(stringResource(R.string.retry)) }
                 }
-            } else {
-                state.videoDetail?.let { detail ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        AsyncImage(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            model = detail.backdropUrl,
-                            contentDescription = detail.title
-                        )
-                        if (detail.isHd) {
-                            SuggestionChip(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(8.dp),
-                                onClick = {},
-                                label = {
-                                    Text(
-                                        text = stringResource(R.string.hd),
-                                        color = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                },
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                )
-                            )
-                        }
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(BufferedBackground.copy(alpha = 0.5f))
-                                .padding(horizontal = 8.dp)
-                                .verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            TopAppBar(
-                                title = {},
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                navigationIcon = {
-                                    IconButton(
-                                        onClick = { onAction(DetailAction.OnBackTap) }
-                                    ) {
-                                        Icon(
-                                            modifier = Modifier.size(25.dp),
-                                            painter = painterResource(com.angelma.core.presentation.R.drawable.ic_back_arrow),
-                                            contentDescription = stringResource(R.string.back)
-                                        )
-                                    }
-                                },
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = Color.Transparent,
-                                    titleContentColor = MaterialTheme.colorScheme.primary
-                                ),
-                                windowInsets = WindowInsets(0, 0, 0, 0),
-                            )
-                            IconButton(
-                                modifier = Modifier
-                                    .padding(vertical = 16.dp)
-                                    .size(150.dp)
-                                    .align(Alignment.CenterHorizontally),
-                                onClick = {
-                                    onAction(
-                                        DetailAction.OnPlayVideo(
-                                            streamUrl = detail.streamUrl,
-                                            title = detail.title
-                                        )
-                                    )
-                                },
-                            ) {
-                                Icon(
-                                    modifier = Modifier.fillMaxSize(),
-                                    painter = painterResource(id = R.drawable.ic_play_button),
-                                    contentDescription = stringResource(R.string.play_video)
-                                )
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = detail.title,
-                                    fontSize = 24.sp
-                                )
-                            }
-                            Text(
-                                text = detail.description
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.year, detail.year)
-                                )
-                                Text(
-                                    text = stringResource(
-                                        R.string.duration,
-                                        detail.durationSeconds.seconds
-                                    )
-                                )
-                            }
-                            Text(
-                                text = detail.license.name,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = detail.attribution,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                }
+
+                detail != null -> DetailContent(detail = detail, onAction = onAction)
             }
         }
     }
+}
+
+@Composable
+private fun ColumnScope.DetailContent(
+    detail: VideoDetail,
+    onAction: (DetailAction) -> Unit
+) {
+    IconButton(
+        modifier = Modifier
+            .padding(vertical = 16.dp)
+            .size(150.dp)
+            .align(Alignment.CenterHorizontally),
+        onClick = {
+            onAction(
+                DetailAction.OnPlayVideo(
+                    streamUrl = detail.streamUrl,
+                    title = detail.title
+                )
+            )
+        },
+    ) {
+        Icon(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = R.drawable.ic_play_button),
+            contentDescription = stringResource(R.string.play_video)
+        )
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = detail.title,
+            fontSize = 24.sp
+        )
+    }
+    Text(text = detail.description)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround
+    ) {
+        Text(text = stringResource(R.string.year, detail.year))
+        Text(
+            text = stringResource(
+                R.string.duration,
+                detail.durationSeconds.seconds
+            )
+        )
+    }
+    Text(
+        text = detail.license.name,
+        fontSize = 12.sp
+    )
+    Text(
+        text = detail.attribution,
+        fontSize = 12.sp
+    )
 }
 
 @Preview(showBackground = true)

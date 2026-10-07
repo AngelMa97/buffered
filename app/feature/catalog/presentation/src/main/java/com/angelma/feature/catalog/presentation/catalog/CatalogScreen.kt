@@ -30,19 +30,20 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.angelma.core.designsystem.BufferedBackground
 import com.angelma.core.designsystem.BufferedTheme
+import com.angelma.core.presentation.sharedVideoImage
 import com.angelma.feature.catalog.domain.models.VideoSummary
 import com.angelma.feature.catalog.presentation.R
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CatalogScreenRoot(
-    onVideoSelected: (videoId: String) -> Unit,
+    onVideoSelected: (videoId: String, posterUrl: String) -> Unit,
     viewModel: CatalogViewModel = koinViewModel()
 ) {
     CatalogScreen(
         onAction = { action ->
             when (action) {
-                is CatalogAction.OnVideoSelect -> onVideoSelected(action.videoId)
+                is CatalogAction.OnVideoSelect -> onVideoSelected(action.videoId,action.poster)
                 else -> viewModel.onAction(action)
             }
         },
@@ -101,11 +102,12 @@ fun CatalogScreen(
                         AsyncImage(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .sharedVideoImage(video.id)
                                 .padding(4.dp)
                                 .aspectRatio(2f / 3f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    onAction(CatalogAction.OnVideoSelect(video.id))
+                                    onAction(CatalogAction.OnVideoSelect(video.id, video.posterUrl))
                                 },
                             model = video.posterUrl,
                             contentDescription = video.title,

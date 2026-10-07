@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.angelma.core.designsystem.BufferedTheme
+import com.angelma.core.presentation.LocalSharedTransitionScope
 
 class MainActivity : ComponentActivity() {
 
@@ -69,9 +72,13 @@ class MainActivity : ComponentActivity() {
                             contentAlignment = Alignment.Center
                         ) {
                             val navController = rememberNavController()
-                            NavigationRoot(
-                                navController = navController
-                            )
+                            SharedTransitionLayout {
+                                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                                    NavigationRoot(
+                                        navController = navController
+                                    )
+                                }
+                            }
                         }
                     }
                 } else {
