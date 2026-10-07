@@ -6,14 +6,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
+import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DecoderReuseEvaluation
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.exoplayer.source.MediaLoadData
 import androidx.navigation.toRoute
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class PlayerViewModel(
     savedStateHandle: SavedStateHandle,
@@ -30,6 +39,8 @@ class PlayerViewModel(
         "720p" to (1280 to 720),
         "1080p" to (1920 to 1080),
     )
+
+    private var bufferJob: Job? = null
 
     var state by mutableStateOf(PlayerState(title = title))
         private set
@@ -64,10 +75,13 @@ class PlayerViewModel(
                 }
             }
 
+            PlayerAction.OnShowAnalyticsChangeValue -> setAnalyticsVisibility()
+
             else -> Unit
         }
     }
 
+    @OptIn(UnstableApi::class)
     private fun exoPlayerSetup() {
         exoPlayer.apply {
             val mediaItem = MediaItem.Builder().setUri(streamUrl).build()
@@ -75,6 +89,86 @@ class PlayerViewModel(
             prepare()
 
             playWhenReady = true
+
+            addAnalyticsListener(object : AnalyticsListener {
+                override fun onDownstreamFormatChanged(
+                    eventTime: AnalyticsListener.EventTime,
+                    mediaLoadData: MediaLoadData
+                ) {
+                    super.onDownstreamFormatChanged(eventTime, mediaLoadData)
+                    mediaLoadData.trackFormat?.let { format ->
+                        state = state.copy(
+                            statsForNerds = state.statsForNerds.copy(
+                                downloading = qualityLabel(format.width, format.height)
+                            )
+                        )
+                    }
+                }
+
+                override fun onVideoInputFormatChanged(
+                    eventTime: AnalyticsListener.EventTime,
+                    format: Format,
+                    decoderReuseEvaluation: DecoderReuseEvaluation?
+                ) {
+                    super.onVideoInputFormatChanged(eventTime, format, decoderReuseEvaluation)
+                    state = state.copy(
+                        statsForNerds = state.statsForNerds.copy(
+                            onScreen = qualityLabel(format.width, format.height)
+                        )
+                    )
+                }
+
+                override fun onBandwidthEstimate(
+                    eventTime: AnalyticsListener.EventTime,
+                    totalLoadTimeMs: Int,
+                    totalBytesLoaded: Long,
+                    bitrateEstimate: Long
+                ) {
+                    super.onBandwidthEstimate(
+                        eventTime,
+                        totalLoadTimeMs,
+                        totalBytesLoaded,
+                        bitrateEstimate
+                    )
+                    state = state.copy(
+                        statsForNerds = state.statsForNerds.copy(
+                            bandwidthBps = bitrateEstimate
+                        )
+                    )
+                }
+
+                override fun onDroppedVideoFrames(
+                    eventTime: AnalyticsListener.EventTime,
+                    droppedFrames: Int,
+                    elapsedMs: Long
+                ) {
+                    super.onDroppedVideoFrames(eventTime, droppedFrames, elapsedMs)
+                    state = state.copy(
+                        statsForNerds = state.statsForNerds.copy(
+                            droppedFrames = state.statsForNerds.droppedFrames + droppedFrames
+                        )
+                    )
+                }
+
+                override fun onVideoDecoderInitialized(
+                    eventTime: AnalyticsListener.EventTime,
+                    decoderName: String,
+                    initializedTimestampMs: Long,
+                    initializationDurationMs: Long
+                ) {
+                    super.onVideoDecoderInitialized(
+                        eventTime,
+                        decoderName,
+                        initializedTimestampMs,
+                        initializationDurationMs
+                    )
+                    state = state.copy(
+                        statsForNerds = state.statsForNerds.copy(
+                            codec = decoderName
+                        )
+                    )
+                }
+            })
 
             addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -99,6 +193,7 @@ class PlayerViewModel(
                         }
                     }
                 }
+
             })
 
         }
@@ -145,6 +240,25 @@ class PlayerViewModel(
             .build()
 
         exoPlayer.trackSelectionParameters = parameters
+    }
+
+    private fun setAnalyticsVisibility() {
+        val visible = !state.isStatsForNerdsVisible
+        state = state.copy(isStatsForNerdsVisible = visible)
+
+        bufferJob?.cancel()
+        if (visible) {
+            bufferJob = viewModelScope.launch {
+                while (true) {
+                    state = state.copy(
+                        statsForNerds = state.statsForNerds.copy(
+                            bufferMs = exoPlayer.totalBufferedDuration
+                        )
+                    )
+                    delay(500.milliseconds)
+                }
+            }
+        }
     }
 
     private fun qualityLabel(width: Int, height: Int): String =

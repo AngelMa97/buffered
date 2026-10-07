@@ -2,10 +2,9 @@ package com.angelma.feature.player.presentation
 
 data class PlayerState(
     val title: String = "",
-    val isLoading: Boolean = true,
     val isPlaying: Boolean = true,
-    val codecs: List<String> = emptyList(),
-    val selectedCodec: String = "",
     val renditions: List<QualityOption> = emptyList(),
-    val selectedQuality: QualitySelection = QualitySelection.Auto
+    val selectedQuality: QualitySelection = QualitySelection.Auto,
+    val isStatsForNerdsVisible: Boolean = false,
+    val statsForNerds: StatsForNerds = StatsForNerds()
 )

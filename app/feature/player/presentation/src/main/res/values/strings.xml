@@ -9,4 +9,10 @@
     <string name="quality">Quality: %1$s</string>
     <string name="auto">AUTO</string>
     <string name="data_saving">Data saving</string>
+    <string name="downloading">Downloading</string>
+    <string name="on_screen">On screen</string>
+    <string name="bandwidth">Bandwidth</string>
+    <string name="buffer">Buffer</string>
+    <string name="dropped_frames">Dropped frames</string>
+    <string name="codec">Codec</string>
 </resources>

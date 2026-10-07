@@ -18,13 +18,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -45,6 +49,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -56,9 +63,14 @@ import androidx.media3.ui.compose.indicators.ProgressIndicator
 import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
 import com.angelma.core.designsystem.BufferedTheme
+import com.angelma.core.designsystem.Quality1080
+import com.angelma.core.designsystem.Quality360
+import com.angelma.core.designsystem.Quality540
+import com.angelma.core.designsystem.Quality720
 import com.angelma.feature.player.presentation.components.SeekBar
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -106,6 +118,15 @@ fun PlayerScreen(
                         sourceSizeDp = presentationState.videoSizeDp
                     )
             )
+
+            if (state.isStatsForNerdsVisible) {
+                AnalyticsBoard(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .widthIn(max = 280.dp),
+                    state = state
+                )
+            }
 
             PlayerUiControl(
                 modifier = Modifier.fillMaxSize(),
@@ -294,6 +315,16 @@ fun PlayerUiControl(
                     }
                 )
                 HorizontalDivider()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Stats for Nerds")
+                    Switch(
+                        checked = state.isStatsForNerdsVisible,
+                        onCheckedChange = { onAction(PlayerAction.OnShowAnalyticsChangeValue) },
+                    )
+                }
             }
         }
     }
@@ -344,6 +375,84 @@ private fun qualityLabel(selection: QualitySelection): String = when (selection)
     QualitySelection.Auto -> stringResource(R.string.auto)
     QualitySelection.DataSaver -> stringResource(R.string.data_saving)
     is QualitySelection.Fixed -> selection.option.quality
+}
+
+@Composable
+fun AnalyticsBoard(
+    modifier: Modifier = Modifier,
+    state: PlayerState
+) {
+    Column(
+        modifier = modifier
+            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+            .padding(4.dp)
+
+    ) {
+        val stats = state.statsForNerds
+        val bufferSeconds = stats.bufferMs / 1000f
+        StatRow(
+            label = stringResource(R.string.downloading),
+            value = stats.downloading,
+            valueColor = getColorFromQuality(stats.downloading)
+        )
+        StatRow(
+            label = stringResource(R.string.on_screen),
+            value = stats.onScreen,
+            valueColor = getColorFromQuality(stats.onScreen)
+        )
+        StatRow(
+            label = stringResource(R.string.bandwidth),
+            value = "%.1f Mb/s".format(stats.bandwidthBps / 1_000_000f)
+        )
+        StatRow(
+            label = stringResource(R.string.buffer),
+            value = "%.1f s".format(bufferSeconds)
+        )
+        LinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            // ExoPlayer's DefaultLoadControl stops buffering at 50 s, so a full bar means "buffer at max".
+            progress = { (bufferSeconds / 50f).coerceIn(0f, 1f) },
+            color = when {
+                bufferSeconds > 8f -> Quality1080
+                bufferSeconds > 4f -> Quality720
+                bufferSeconds > 1f -> Quality540
+                else -> Quality360
+            },
+            trackColor = Color.White.copy(alpha = 0.2f)
+        )
+        StatRow(
+            label = stringResource(R.string.dropped_frames),
+            value = stats.droppedFrames.toString()
+        )
+        StatRow(
+            label = stringResource(R.string.codec),
+            value = stats.codec
+        )
+    }
+}
+
+/** Label in the default text color, value in [valueColor] (e.g. the quality color). */
+@Composable
+private fun StatRow(
+    label: String,
+    value: String,
+    valueColor: Color = Color.Unspecified,
+) {
+    Text(
+        text = buildAnnotatedString {
+            append("$label: ")
+            withStyle(SpanStyle(color = valueColor)) { append(value) }
+        },
+        style = MaterialTheme.typography.labelSmall
+    )
+}
+
+fun getColorFromQuality(quality: String): Color = when (quality) {
+    "1080p" -> Quality1080
+    "720p" -> Quality720
+    "540p" -> Quality540
+    "360p" -> Quality360
+    else -> Quality360
 }
 
 @Preview(showBackground = true)

@@ -8,4 +8,5 @@ sealed interface PlayerAction {
     data object OnSeekBackTap : PlayerAction
     data object OnSeekForwardTap : PlayerAction
     data class OnSelectedRendition(val selection: QualitySelection) : PlayerAction
+    data object OnShowAnalyticsChangeValue : PlayerAction
 }
