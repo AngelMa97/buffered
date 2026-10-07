@@ -408,7 +408,6 @@ fun AnalyticsBoard(
         )
         LinearProgressIndicator(
             modifier = Modifier.fillMaxWidth(),
-            // ExoPlayer's DefaultLoadControl stops buffering at 50 s, so a full bar means "buffer at max".
             progress = { (bufferSeconds / 50f).coerceIn(0f, 1f) },
             color = when {
                 bufferSeconds > 8f -> Quality1080

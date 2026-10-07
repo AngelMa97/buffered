@@ -2,7 +2,6 @@ package com.angelma.core.designsystem
 
 import androidx.compose.ui.graphics.Color
 
-// Palette shared with the README animation (docs/assets/make_animation.py).
 val BufferedOrange = Color(0xFFFB923C)
 val BufferedOrangeContainer = Color(0xFF3A2414)
 val BufferedOnOrangeContainer = Color(0xFFFED7AA)
@@ -17,7 +16,6 @@ val BufferedText = Color(0xFFE8EEF5)
 val BufferedTextMuted = Color(0xFF8A98AA)
 val BufferedError = Color(0xFFF87171)
 
-// Stream qualities, best to worst. Used by the quality menu and Stats for nerds.
 val Quality1080 = Color(0xFF34D399)
 val Quality720 = Color(0xFF60A5FA)
 val Quality540 = Color(0xFFFBBF24)

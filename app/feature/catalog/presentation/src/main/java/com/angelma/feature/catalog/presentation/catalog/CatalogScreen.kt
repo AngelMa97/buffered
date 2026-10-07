@@ -67,8 +67,6 @@ fun CatalogScreen(
                 ) { Text(stringResource(R.string.retry)) }
             }
         } else {
-            // One grid for both states: placeholders keep the same layout while loading, so the
-            // posters replace them in place instead of popping in under a spinner.
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Fixed(2)
@@ -116,7 +114,6 @@ private fun CatalogScreenPreview() {
             {},
             CatalogState(
                 isLoading = false,
-//                error = DataError.Network.NO_INTERNET.asUiText(),
                 videos = listOf(
                     VideoSummary(
                         id = "TODO()",

@@ -7,8 +7,6 @@ android {
 }
 
 dependencies {
-    // api: the public extensions (HttpClient.get, safeCall) expose HttpClient, Result and DataError
-    // in their signatures, so anyone depending on :core:data needs to see those types.
     api(libs.ktor.client.core)
     api(projects.core.domain)
 

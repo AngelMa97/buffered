@@ -53,8 +53,6 @@ fun PosterCard(
                 indication = ripple(),
                 onClick = onClick
             ),
-        // Crossfade only here: the detail header must not fade when it swaps poster → backdrop,
-        // right as the shared transition ends.
         model = ImageRequest.Builder(LocalPlatformContext.current)
             .data(video.posterUrl)
             .crossfade(true)

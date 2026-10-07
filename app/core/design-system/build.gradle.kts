@@ -7,7 +7,6 @@ android {
 }
 
 dependencies {
-    // api: whoever uses BufferedTheme also uses MaterialTheme, Text, Button…
     api(libs.androidx.compose.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)

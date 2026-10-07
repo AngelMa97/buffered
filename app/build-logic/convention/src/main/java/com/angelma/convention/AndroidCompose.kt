@@ -7,7 +7,6 @@ import org.gradle.kotlin.dsl.dependencies
 internal fun Project.configureAndroidCompose(
     commonExtension: CommonExtension
 ) {
-    // Since Kotlin 2.0 the Compose compiler is a separate Kotlin plugin.
     pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 
     commonExtension.buildFeatures.compose = true
