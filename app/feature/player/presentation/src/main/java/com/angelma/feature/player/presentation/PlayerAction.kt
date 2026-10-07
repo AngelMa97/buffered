@@ -7,5 +7,5 @@ sealed interface PlayerAction {
     data class OnDragVideoProgress(val progress: Long) : PlayerAction
     data object OnSeekBackTap : PlayerAction
     data object OnSeekForwardTap : PlayerAction
-    data class OnSelectedRendition(val rendition: QualityOption?) : PlayerAction
+    data class OnSelectedRendition(val selection: QualitySelection) : PlayerAction
 }

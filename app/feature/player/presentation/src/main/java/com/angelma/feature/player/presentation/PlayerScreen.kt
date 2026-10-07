@@ -281,11 +281,14 @@ fun PlayerUiControl(
                 SettingsItem(
                     title = stringResource(
                         R.string.quality,
-                        if (state.selectedRendition == null) stringResource(R.string.auto) else state.selectedRendition.quality
+                        qualityLabel(state.selectedQuality)
                     ),
-                    options = listOf(null) + state.renditions,
-                    selected = state.selectedRendition,
-                    optionLabel = { option -> option?.quality ?: stringResource(R.string.auto) },
+                    options = listOf(
+                        QualitySelection.Auto,
+                        QualitySelection.DataSaver
+                    ) + state.renditions.map { QualitySelection.Fixed(it) },
+                    selected = state.selectedQuality,
+                    optionLabel = { qualityLabel(it) },
                     onSelect = { selection ->
                         onAction(PlayerAction.OnSelectedRendition(selection))
                     }
@@ -334,6 +337,13 @@ fun <T> SettingsItem(
             }
         }
     }
+}
+
+@Composable
+private fun qualityLabel(selection: QualitySelection): String = when (selection) {
+    QualitySelection.Auto -> stringResource(R.string.auto)
+    QualitySelection.DataSaver -> stringResource(R.string.data_saving)
+    is QualitySelection.Fixed -> selection.option.quality
 }
 
 @Preview(showBackground = true)

@@ -1,5 +1,6 @@
 package com.angelma.feature.player.presentation
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,6 +11,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.toRoute
 
@@ -52,7 +54,16 @@ class PlayerViewModel(
             is PlayerAction.OnDragVideoProgress -> moveVideoTo(action.progress)
             PlayerAction.OnSeekBackTap -> exoPlayer.seekBack()
             PlayerAction.OnSeekForwardTap -> exoPlayer.seekForward()
-            is PlayerAction.OnSelectedRendition -> setupQuality(action.rendition)
+            is PlayerAction.OnSelectedRendition -> {
+                if (action.selection == state.selectedQuality) return
+                state = state.copy(selectedQuality = action.selection)
+                when (val selection = action.selection) {
+                    QualitySelection.Auto -> setupQuality(null)
+                    QualitySelection.DataSaver -> setMaxQuality()
+                    is QualitySelection.Fixed -> setupQuality(selection.option)
+                }
+            }
+
             else -> Unit
         }
     }
@@ -111,21 +122,29 @@ class PlayerViewModel(
     }
 
     private fun setupQuality(quality: QualityOption?) {
-        if (state.selectedRendition != quality) {
-            state = state.copy(selectedRendition = quality)
+        val builder = exoPlayer.trackSelectionParameters
+            .buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+            .clearVideoSizeConstraints()
 
-            val builder = exoPlayer.trackSelectionParameters
-                .buildUpon()
-                .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
-
-            if (quality != null) {
-                val mOverride = TrackSelectionOverride(quality.trackGroup, quality.index)
-                builder.addOverride(mOverride)
-            }
-
-            exoPlayer.trackSelectionParameters = builder.build()
-
+        if (quality != null) {
+            val mOverride = TrackSelectionOverride(quality.trackGroup, quality.index)
+            builder.addOverride(mOverride)
         }
+
+        exoPlayer.trackSelectionParameters = builder.build()
+
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun setMaxQuality() {
+        val parameters = exoPlayer.trackSelectionParameters
+            .buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+            .setMaxVideoSize(1280, 720)
+            .build()
+
+        exoPlayer.trackSelectionParameters = parameters
     }
 
     private fun qualityLabel(width: Int, height: Int): String =

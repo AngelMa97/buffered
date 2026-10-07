@@ -7,5 +7,5 @@ data class PlayerState(
     val codecs: List<String> = emptyList(),
     val selectedCodec: String = "",
     val renditions: List<QualityOption> = emptyList(),
-    val selectedRendition: QualityOption? = null
+    val selectedQuality: QualitySelection = QualitySelection.Auto
 )
