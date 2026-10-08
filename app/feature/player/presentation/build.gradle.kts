@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.androidx.media3.ui.compose)
 
     testImplementation(libs.junit)
+    testImplementation(libs.assertk)
 
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
