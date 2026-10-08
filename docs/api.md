@@ -1,8 +1,8 @@
-# API de Buffered (contrato servidor ⇄ app)
+# Buffered API (server ⇄ app contract)
 
-Este documento es el acuerdo entre `server/` y `app/`. Si cambia algo aquí, cambian los dos.
-Todas las respuestas son JSON en UTF-8. Las URLs que devuelve la API son **absolutas** y se arman con
-el host que usó el cliente (`10.0.2.2` desde el emulador, `localhost` por `adb reverse`, la IP de la LAN…).
+This document is the agreement between `server/` and `app/`. If something changes here, both change.
+All responses are UTF-8 JSON. URLs returned by the API are **absolute** and built from the host the
+client used (`10.0.2.2` from the emulator, `localhost` through `adb reverse`, the LAN IP…).
 
 ## `GET /health`
 
@@ -12,7 +12,7 @@ el host que usó el cliente (`10.0.2.2` desde el emulador, `localhost` por `adb 
 
 ## `GET /api/videos`
 
-Lista para la cuadrícula del catálogo, en el orden de `pipeline/videos.json`.
+List for the catalog grid, in the order of `pipeline/videos.json`.
 
 ```json
 [
@@ -28,7 +28,7 @@ Lista para la cuadrícula del catálogo, en el orden de `pipeline/videos.json`.
 
 ## `GET /api/videos/{id}`
 
-Detalle para la pantalla de detalle y el reproductor.
+Detail for the detail screen and the player.
 
 ```json
 {
@@ -49,10 +49,10 @@ Detalle para la pantalla de detalle y el reproductor.
 }
 ```
 
-`renditions` es informativo (por ejemplo, mostrar "HD" en el detalle). El reproductor **no** lo
-necesita: las calidades reales las lee de `master.m3u8`.
+`renditions` is informational (for example, to show "HD" on the detail screen). The player does
+**not** need it: it reads the actual qualities from `master.m3u8`.
 
-Si el id no existe: **`404`** con
+If the id doesn't exist: **`404`** with
 
 ```json
 { "error": "video_not_found", "message": "No video with id 'xyz'" }
@@ -60,16 +60,16 @@ Si el id no existe: **`404`** con
 
 ## `GET /media/{id}/…`
 
-Archivos que genera el pipeline: `master.m3u8`, `{calidad}/index.m3u8`, `{calidad}/seg_NNNN.ts`,
-`poster.jpg`, `backdrop.jpg`. Tipos de contenido:
+Files produced by the pipeline: `master.m3u8`, `{quality}/index.m3u8`, `{quality}/seg_NNNN.ts`,
+`poster.jpg`, `backdrop.jpg`. Content types:
 
-| Extensión | Content-Type |
+| Extension | Content-Type |
 |---|---|
 | `.m3u8` | `application/vnd.apple.mpegurl` |
 | `.ts` | `video/mp2t` |
 | `.jpg` | `image/jpeg` |
 
-## Modo demo (opcional, paso 8 del tutorial del servidor)
+## Demo mode (optional)
 
-`PUT /demo/throttle?mbps=1.5` limita la velocidad de `/media/**` para provocar el ABR en vivo;
-`mbps=0` quita el límite. Solo existe si el servidor arranca con el modo demo activado.
+`PUT /demo/throttle?mbps=1.5` caps the speed of `/media/**` to trigger ABR live; `mbps=0` removes
+the cap. Only available when the server starts with demo mode enabled (`BUFFERED_DEMO=true`).
