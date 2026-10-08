@@ -51,10 +51,13 @@ Posters from 4:3 sources (silent films) come out 4:3: the app has to crop them (
 | Big Buck Bunny, Sintel, Tears of Steel | CC BY 3.0 — attribution required | 1080p (Sintel and ToS widescreen) |
 | Elephants Dream | CC BY 2.5 — attribution required | 576p |
 | Night of the Living Dead (1968) | Public domain | 480p |
-| The General (1926) | Public domain (US) — **verify the music in this copy** | 448p (native) |
-| The Immigrant (1917) | Public domain (US) — no audio | 480p |
+| The General (1926) | Public domain (US) — served muted: the added music may be copyrighted | 432p (cropped) |
+| The Immigrant (1917) | Public domain (US) — no audio | 430p (deinterlaced, cropped) |
 
 Each video's credit text is in `attribution` and reaches the app through `catalog.json`.
+
+Optional per-video fields: `poster_seconds` (poster frame), `deinterlace`, `crop` (FFmpeg
+`w:h:x:y`, removes baked-in black borders) and `mute` (drops the audio track).
 
 A quality's name (`1080p`, `720p`…) is the **box**, not the actual height: *Sintel*'s `1080p` is
 1920×818. If the app labels qualities, it should use the rendition's `name`, not the short side.

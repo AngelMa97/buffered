@@ -127,7 +127,7 @@ def inspect(source, video):
         "height": height,
         "fps": fps,
         "duration": float(data["format"]["duration"]),
-        "has_audio": any(s["codec_type"] == "audio" for s in data["streams"]),
+        "has_audio": not video.get("mute") and any(s["codec_type"] == "audio" for s in data["streams"]),
     }
 
 

@@ -63,9 +63,10 @@
       "source_url": "https://archive.org/download/TheGeneral/The_General.mpeg",
       "poster_seconds": 50,
       "crop": "608:432:0:8",
+      "mute": true,
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "The General (1926), dir. Clyde Bruckman and Buster Keaton. Public domain in the United States. Source: Internet Archive.",
-      "notes": "Verify that the music added to this copy is also in the public domain before publishing the repo."
+      "notes": "Served without audio: this copy has an added music track whose copyright status depends on the recording."
     },
     {
       "id": "the-immigrant",
