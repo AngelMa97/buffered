@@ -11,6 +11,7 @@ dependencies {
     testImplementation(libs.assertk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.navigation.testing)
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 
