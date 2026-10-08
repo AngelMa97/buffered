@@ -5,6 +5,7 @@ package com.angelma.feature.player.presentation
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -88,6 +89,8 @@ fun PlayerScreenRoot(
     )
 }
 
+private val TOP_BAR_HEIGHT = 80.dp
+
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerScreen(
@@ -101,6 +104,11 @@ fun PlayerScreen(
         exoPlayer?.let { player ->
             val activity = LocalActivity.current
             val presentationState = rememberPresentationState(player)
+            var controlsVisible by rememberSaveable { mutableStateOf(false) }
+            val statsTopPadding by animateDpAsState(
+                targetValue = if (controlsVisible) TOP_BAR_HEIGHT else 0.dp,
+                label = "statsTopPadding"
+            )
 
             LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
                 if (activity?.isChangingConfigurations == false) {
@@ -120,7 +128,8 @@ fun PlayerScreen(
             if (state.isStatsForNerdsVisible) {
                 AnalyticsBoard(
                     modifier = Modifier
-                        .align(Alignment.TopCenter)
+                        .align(Alignment.TopStart)
+                        .padding(top = statsTopPadding, start = 16.dp)
                         .widthIn(max = 280.dp),
                     state = state
                 )
@@ -128,6 +137,8 @@ fun PlayerScreen(
 
             PlayerUiControl(
                 modifier = Modifier.fillMaxSize(),
+                controlsVisible = controlsVisible,
+                onControlsVisibleChange = { controlsVisible = it },
                 onAction = onAction,
                 state = state,
                 player = player
@@ -141,11 +152,12 @@ fun PlayerScreen(
 @Composable
 fun PlayerUiControl(
     modifier: Modifier = Modifier,
+    controlsVisible: Boolean,
+    onControlsVisibleChange: (Boolean) -> Unit,
     onAction: (PlayerAction) -> Unit,
     state: PlayerState,
     player: ExoPlayer
 ) {
-    var controlsVisible by rememberSaveable { mutableStateOf(false) }
     var isSeeking by remember { mutableStateOf(false) }
     val settingsSheet = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -155,7 +167,7 @@ fun PlayerUiControl(
     LaunchedEffect(controlsVisible, state.isPlaying, isSeeking) {
         if (controlsVisible && state.isPlaying && !isSeeking) {
             delay(2.seconds)
-            controlsVisible = false
+            onControlsVisibleChange(false)
         }
     }
 
@@ -163,7 +175,7 @@ fun PlayerUiControl(
         modifier
             .pointerInput(Unit) {
                 detectTapGestures { _ ->
-                    controlsVisible = !controlsVisible
+                    onControlsVisibleChange(!controlsVisible)
                 }
             },
     ) {
