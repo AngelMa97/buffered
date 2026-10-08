@@ -8,7 +8,7 @@
       "description": "A giant, gentle rabbit puts up with three bullying rodents until they go one step too far, and he plans his revenge. Blender Foundation's second open movie.",
       "source_url": "https://download.blender.org/demo/movies/BBB/bbb_sunflower_1080p_30fps_normal.mp4.zip",
       "zip_member": "bbb_sunflower_1080p_30fps_normal.mp4",
-      "poster_seconds": 50,
+      "poster_seconds": 59,
       "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
       "attribution": "(c) copyright 2008, Blender Foundation / www.bigbuckbunny.org"
     },
@@ -18,6 +18,7 @@
       "year": 2010,
       "description": "A lonely young woman searches the world for the baby dragon she once rescued and lost. Blender Foundation's third open movie.",
       "source_url": "https://download.blender.org/durian/movies/Sintel.2010.1080p.mkv",
+      "poster_seconds": 38,
       "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
       "attribution": "(c) copyright Blender Foundation | durian.blender.org"
     },
@@ -28,6 +29,7 @@
       "description": "In a future Amsterdam, a group of scientists tries to save the world from destructive robots by recreating a single moment from the past. Blender Foundation's live-action and VFX open movie.",
       "source_url": "https://download.blender.org/demo/movies/ToS/tears_of_steel_1080p.mov.zip",
       "zip_member": "tears_of_steel_1080p.mov",
+      "poster_seconds": 58,
       "license": { "name": "CC BY 3.0", "url": "https://creativecommons.org/licenses/by/3.0/" },
       "attribution": "(CC) Blender Foundation | mango.blender.org",
       "notes": "Subtitles available at https://download.blender.org/demo/movies/ToS/subtitles/ (version 2)."
@@ -38,6 +40,7 @@
       "year": 2006,
       "description": "Two strange characters explore a capricious and seemingly infinite machine. The world's first open movie, made by the Blender community.",
       "source_url": "https://download.blender.org/ED/ED_1024.avi",
+      "poster_seconds": 50,
       "license": { "name": "CC BY 2.5", "url": "https://creativecommons.org/licenses/by/2.5/" },
       "attribution": "(c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org"
     },
@@ -47,6 +50,7 @@
       "year": 1968,
       "description": "A group of strangers barricade themselves in a farmhouse to survive a night of attacks by the reanimated dead. George A. Romero's landmark horror film.",
       "source_url": "https://archive.org/download/Night.Of.The.Living.Dead_1080p/NightOfTheLivingDead_720p.mp4",
+      "poster_seconds": 26,
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "Night of the Living Dead (1968), dir. George A. Romero. Public domain (published without a copyright notice). Source: Internet Archive.",
       "notes": "The file is 480p even though it's named 720p: the ladder tops out at 480p."
@@ -57,6 +61,8 @@
       "year": 1926,
       "description": "When Union spies steal his beloved locomotive, a Southern railroad engineer chases them across enemy lines. Buster Keaton's silent comedy classic.",
       "source_url": "https://archive.org/download/TheGeneral/The_General.mpeg",
+      "poster_seconds": 50,
+      "crop": "608:432:0:8",
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "The General (1926), dir. Clyde Bruckman and Buster Keaton. Public domain in the United States. Source: Internet Archive.",
       "notes": "Verify that the music added to this copy is also in the public domain before publishing the repo."
@@ -67,6 +73,9 @@
       "year": 1917,
       "description": "The Tramp crosses the Atlantic to America, finds love on the voyage and gets into trouble over a single coin in a restaurant. A Charlie Chaplin short.",
       "source_url": "https://archive.org/download/the-immigrant-1917_202304/The%20Immigrant%20%281917%29.mp4",
+      "poster_seconds": 54,
+      "deinterlace": true,
+      "crop": "570:430:38:26",
       "license": { "name": "Public Domain", "url": "https://creativecommons.org/publicdomain/mark/1.0/" },
       "attribution": "The Immigrant (1917), dir. Charlie Chaplin. Public domain in the United States. Source: Internet Archive.",
       "notes": "Copy without an audio track (checked with ffprobe): no added music to review."

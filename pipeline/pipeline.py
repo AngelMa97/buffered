@@ -94,25 +94,37 @@ def download(video):
 
 # --- 2. Inspection ----------------------------------------------------------------------------
 
-def inspect(source):
+def source_filters(video):
+    """Per-video cleanup applied before any scaling: deinterlace and crop baked-in black borders."""
+    filters = []
+    if video.get("deinterlace"):
+        filters.append("bwdif=mode=send_frame")
+    if video.get("crop"):
+        filters.append(f"crop={video['crop']}")
+    return filters
+
+
+def inspect(source, video):
     data = json.loads(run([
         "ffprobe", "-v", "error", "-print_format", "json",
         "-show_streams", "-show_format", str(source),
     ]))
-    video = next(s for s in data["streams"] if s["codec_type"] == "video")
-    num, den = (int(x) for x in video.get("avg_frame_rate", "0/1").split("/"))
+    stream = next(s for s in data["streams"] if s["codec_type"] == "video")
+    num, den = (int(x) for x in stream.get("avg_frame_rate", "0/1").split("/"))
     fps = num / den if den else 0
     if not fps:
-        num, den = (int(x) for x in video["r_frame_rate"].split("/"))
+        num, den = (int(x) for x in stream["r_frame_rate"].split("/"))
         fps = num / den
     # Display width taking the sample aspect ratio (SAR) into account: some SD sources don't have
     # square pixels.
-    sar = video.get("sample_aspect_ratio", "1:1")
+    sar = stream.get("sample_aspect_ratio", "1:1")
     sn, sd = (int(x) for x in sar.split(":")) if sar not in ("0:1", "N/A") else (1, 1)
-    width = round(video["width"] * sn / sd)
+    width, height = round(stream["width"] * sn / sd), stream["height"]
+    if video.get("crop"):
+        width, height = (int(x) for x in video["crop"].split(":")[:2])
     return {
         "width": width,
-        "height": video["height"],
+        "height": height,
         "fps": fps,
         "duration": float(data["format"]["duration"]),
         "has_audio": any(s["codec_type"] == "audio" for s in data["streams"]),
@@ -136,8 +148,9 @@ def pick_rungs(info):
     return rungs or [LADDER[-1]]
 
 
-def encode(source, info, output, max_seconds):
+def encode(video, source, info, output, max_seconds):
     renditions = []
+    cleanup = "".join(f + "," for f in source_filters(video))
     for name, box_w, box_h, bitrate, level, codecs in pick_rungs(info):
         folder = output / name
         folder.mkdir(parents=True, exist_ok=True)
@@ -150,7 +163,7 @@ def encode(source, info, output, max_seconds):
             "-map", "0:v:0",
             *(["-map", "0:a:0"] if info["has_audio"] else []),
             # Fits the box without distortion; even dimensions (H.264 4:2:0); square pixels.
-            "-vf", (f"scale=w={box_w}:h={box_h}:force_original_aspect_ratio=decrease:flags=lanczos,"
+            "-vf", (f"{cleanup}scale=w={box_w}:h={box_h}:force_original_aspect_ratio=decrease:flags=lanczos,"
                     "scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1,format=yuv420p"),
             "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-level", level,
             "-b:v", bitrate, "-maxrate", bitrate, "-bufsize", bufsize,
@@ -219,7 +232,8 @@ def images(video, source, info, output, max_seconds):
     for name, width in (("poster.jpg", 640), ("backdrop.jpg", 1280)):
         run([
             "ffmpeg", "-hide_banner", "-y", "-ss", at, "-i", str(source), "-frames:v", "1",
-            "-vf", f"scale={width}:-2:flags=lanczos,setsar=1", "-q:v", "3", str(output / name),
+            "-vf", ",".join([*source_filters(video), f"scale={width}:-2:flags=lanczos", "setsar=1"]),
+            "-q:v", "3", str(output / name),
         ])
 
 
@@ -233,13 +247,13 @@ def process(video, max_seconds, force):
         return json.loads(meta_path.read_text())
     log(f"{video['id']}: processing")
     source = download(video)
-    info = inspect(source)
+    info = inspect(source, video)
     log(f"  source: {info['width']}x{info['height']} @ {info['fps']:.2f} fps, "
         f"{info['duration'] / 60:.1f} min, audio={'yes' if info['has_audio'] else 'no'}")
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
-    renditions = encode(source, info, output, max_seconds)
+    renditions = encode(video, source, info, output, max_seconds)
     write_master(output, renditions)
     images(video, source, info, output, max_seconds)
     duration = min(info["duration"], max_seconds) if max_seconds else info["duration"]
